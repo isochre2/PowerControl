@@ -3,9 +3,17 @@ using System.Diagnostics;
 
 namespace PowerControl
 {
-    public class ControlWorker(ILogger<ControlWorker> logger) : BackgroundService
+    public class ControlWorker : BackgroundService
     {
+        private readonly ILogger<ControlWorker> logger;
+
         Stopwatch debugStopwatch = new Stopwatch();
+
+        public ControlWorker(ILogger<ControlWorker> _logger)
+        {
+            logger = _logger;
+            debugStopwatch.Start();
+        }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
