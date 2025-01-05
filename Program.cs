@@ -1,9 +1,13 @@
+using Google.Protobuf.WellKnownTypes;
+using PowerControl;
 using PowerControl.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddGrpc();
+
+builder.Services.AddHostedService<ControlWorker>();
 
 var app = builder.Build();
 
