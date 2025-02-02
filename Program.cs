@@ -1,13 +1,18 @@
 using Google.Protobuf.WellKnownTypes;
+using Microsoft.Extensions.DependencyInjection;
 using PowerControl;
 using PowerControl.Services;
+using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddGrpc();
 
-builder.Services.AddHostedService<ControlWorker>();
+builder.Services.AddSingleton<ControlWorker>();
+
+builder.Services.AddHostedService(provider => provider.GetRequiredService<ControlWorker>());
+builder.Services.AddSingleton(serviceProvider => new ControlService(serviceProvider.GetRequiredService<ILogger<ControlService>>(), serviceProvider));
 
 var app = builder.Build();
 
