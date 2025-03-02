@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Protos;
 using System.Diagnostics;
+using System.Device.Gpio;
 
 namespace PowerControl
 {
@@ -10,12 +11,39 @@ namespace PowerControl
         public WaterStateReply fakeWaterState { get; set; } = new WaterStateReply();
         public ValveStateReply fakeValveState { get; set; } = new ValveStateReply();
 
+        private static GpioController gpioController = new GpioController();
+
+        private List<int> gpioNumbers = new List<int>() { 4, 17, 18, 22, 23, 24};
+
         Stopwatch debugStopwatch = new Stopwatch();
 
         public ControlWorker(ILogger<ControlWorker> _logger)
         {
             logger = _logger;
             debugStopwatch.Start();
+            InitGpios();
+        }
+
+        private void InitGpios()
+        {
+            foreach (var pinNumber in gpioNumbers)
+            {
+                gpioController.OpenPin(pinNumber, PinMode.InputPullUp);
+            }
+
+            Task.Run(() =>
+            {
+                while (true)
+                {
+                    foreach (var pinNumber in gpioNumbers)
+                    {
+                        Console.WriteLine("GPIO " + pinNumber + " : " + gpioController.Read(pinNumber));
+                    }
+                    Console.WriteLine("------------------------------------------------------");
+                    Thread.Sleep(1000);
+                }
+
+            });
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
