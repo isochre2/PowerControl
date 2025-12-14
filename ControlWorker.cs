@@ -42,20 +42,21 @@ namespace PowerControl
                 gpioController.OpenPin(pinNumber, PinMode.InputPullUp);
             }
 
-            Task.Run(() =>
             initialized = true;
+            var cts = new CancellationTokenSource();
+            Task.Run(async () =>
             {
-                while (true)
+                while (!cts.IsCancellationRequested)
                 {
                     foreach (var pinNumber in gpioNumbers)
                     {
                         Console.WriteLine("GPIO " + pinNumber + " : " + gpioController.Read(pinNumber));
                     }
-                    Console.WriteLine("------------------------------------------------------");
-                    Thread.Sleep(1000);
-                }
 
-            });
+                    Console.WriteLine("------------------------------------------------------");
+                    await Task.Delay(1000, cts.Token);
+                }
+            }, cts.Token);
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
