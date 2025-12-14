@@ -11,9 +11,11 @@ namespace PowerControl
         public WaterStateReply fakeWaterState { get; set; } = new WaterStateReply();
         public ValveStateReply fakeValveState { get; set; } = new ValveStateReply();
 
-        private static GpioController gpioController = new GpioController();
+        public static bool initialized = false;
 
-        private List<int> gpioNumbers = new List<int>() { 4, 17, 18, 22, 23, 24};
+        private static GpioController gpioController;
+
+        private List<int> gpioNumbers = new List<int>() { 4, 17, 18, 22, 23, 24 };
 
         Stopwatch debugStopwatch = new Stopwatch();
 
@@ -21,17 +23,27 @@ namespace PowerControl
         {
             logger = _logger;
             debugStopwatch.Start();
-            InitGpios();
+            try
+            {
+                InitGpios();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Impossible d'initialiser les GPIOs de contrôle");
+                //throw;
+            }
         }
 
         private void InitGpios()
         {
+            gpioController = new GpioController();
             foreach (var pinNumber in gpioNumbers)
             {
                 gpioController.OpenPin(pinNumber, PinMode.InputPullUp);
             }
 
             Task.Run(() =>
+            initialized = true;
             {
                 while (true)
                 {
@@ -48,6 +60,7 @@ namespace PowerControl
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            //TODO : en fonction du initialised, lire les GPIO ou simuler
             fakeWaterState.WaterDown = true;
             fakeWaterState.WaterUp = true;
             fakeValveState.ValveDown = true;
