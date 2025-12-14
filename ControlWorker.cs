@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using Protos;
+﻿using Protos;
 using System.Diagnostics;
 using System.Device.Gpio;
 
@@ -70,10 +69,12 @@ namespace PowerControl
             {
                 if (logger.IsEnabled(LogLevel.Information))
                 {
-                    if (debugStopwatch.ElapsedMilliseconds > 5000) //toutes les Xmin on met à jour artificielement l'état de l'unité de contrôle
+                    if (debugStopwatch.ElapsedMilliseconds >
+                        5000) //toutes les Xmin on met à jour artificielement l'état de l'unité de contrôle
                     {
                         debugStopwatch.Restart();
-                        Console.WriteLine("Updating fake valve state and fake water state fakeWaterState.WaterDown = " + fakeWaterState.WaterDown);
+                        Console.WriteLine("Updating fake valve state and fake water state fakeWaterState.WaterDown = " +
+                                          fakeWaterState.WaterDown);
 
                         if (fakeWaterState.WaterDown && fakeWaterState.WaterUp)
                         {
@@ -110,4 +111,3 @@ namespace PowerControl
         }
     }
 }
-
