@@ -10,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddGrpc();
 
 builder.Services.AddSingleton<ControlWorker>();
+builder.Services.AddSingleton<ShutdownWorker>();
 
 builder.Services.AddHostedService(provider => provider.GetRequiredService<ControlWorker>());
 builder.Services.AddSingleton(serviceProvider => new ControlService(serviceProvider.GetRequiredService<ILogger<ControlService>>(), serviceProvider));
