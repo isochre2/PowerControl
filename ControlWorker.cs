@@ -23,7 +23,6 @@ namespace PowerControl
             logger = _logger;
             ;
             debugStopwatch.Start();
-            InitGpios();
             try
             {
                 InitGpios();
