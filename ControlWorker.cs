@@ -21,6 +21,7 @@ namespace PowerControl
         public ControlWorker(ILogger<ControlWorker> _logger)
         {
             logger = _logger;
+            ;
             debugStopwatch.Start();
             try
             {
