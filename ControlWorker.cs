@@ -29,7 +29,8 @@ namespace PowerControl
             }
             catch (Exception e)
             {
-                Console.WriteLine("Impossible d'initialiser les GPIOs de contrôle");
+                
+                Console.WriteLine("Impossible d'initialiser les GPIOs de contrôle : \n" + e.Message);
                 //throw;
             }
         }
