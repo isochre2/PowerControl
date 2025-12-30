@@ -59,7 +59,7 @@ public class ShutdownWorker : BackgroundService
     {
         try
         {
-            string privateKeyPath = "/app/ssh/id_rsa/id_rsa_shutdown";
+            string privateKeyPath = "/app/ssh/id_rsa_shutdown";
             var keyFile = new PrivateKeyFile(privateKeyPath);
             var keyAuth = new PrivateKeyAuthenticationMethod(username, keyFile);
             var connectionInfo = new ConnectionInfo(host, username, keyAuth);
