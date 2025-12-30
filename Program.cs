@@ -13,6 +13,7 @@ builder.Services.AddSingleton<ControlWorker>();
 builder.Services.AddSingleton<ShutdownWorker>();
 
 builder.Services.AddHostedService(provider => provider.GetRequiredService<ControlWorker>());
+builder.Services.AddHostedService(provider => provider.GetRequiredService<ShutdownWorker>());
 builder.Services.AddSingleton(serviceProvider => new ControlService(serviceProvider.GetRequiredService<ILogger<ControlService>>(), serviceProvider));
 
 var app = builder.Build();
