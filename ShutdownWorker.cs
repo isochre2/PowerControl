@@ -102,7 +102,7 @@ public class ShutdownWorker : BackgroundService
                 //On vérifie l'état de 
                 if (gpioController.Read(SHUTDOWN_GPIO) == PinValue.Low)
                 {
-                    var result = ExecuteCommand("touch /var/log/shutdown_log.txt && chmod 666 /var/log/shutdown_log.txt && echo 'Commande d\\'arrêt reçue le '$(date) >> /var/log/shutdown_log.txt && sudo shutdown -h now");
+                    var result = ExecuteCommand("sudo shutdown -h now");
                     Console.WriteLine(result);
                 }
 
