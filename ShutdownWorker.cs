@@ -39,7 +39,6 @@ public class ShutdownWorker : BackgroundService
         gpioController = new GpioController();
         gpioController.OpenPin(SHUTDOWN_GPIO, PinMode.InputPullUp);
         Connect("raspberrypi", "isochre");
-        Connect("raspberrypi.local", "isochre");
         
         initialized = true;
         
