@@ -89,8 +89,8 @@ public class ShutdownWorker : BackgroundService
         {
             while (!cts.IsCancellationRequested)
             {
-                if (RaspberryControl?.SSHClient?.IsConnected is false) RaspberryControl.Connect();
-                if (RaspberryPower?.SSHClient?.IsConnected is false) RaspberryPower.Connect();
+                if (RaspberryControl?.SSHClient?.IsConnected is not true) RaspberryControl?.Connect();
+                if (RaspberryPower?.SSHClient?.IsConnected is not true) RaspberryPower?.Connect();
 
 
                 Console.WriteLine("GPIO " + SHUTDOWN_GPIO + " : " + gpioController.Read(SHUTDOWN_GPIO));
