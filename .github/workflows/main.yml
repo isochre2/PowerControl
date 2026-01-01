@@ -63,3 +63,19 @@ jobs:
           args: "La GitHub Action a échoué. ❌"
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+
+      - name: Notify Discord on success
+        if: success()
+        uses: Ilshidur/action-discord@master
+        with:
+            args: "La GitHub Action s’est exécutée avec succès ! 🎉"
+        env:
+            DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+
+      - name: Notify Discord on failure
+        if: failure()
+        uses: Ilshidur/action-discord@master
+        with:
+          args: "La GitHub Action a échoué. ❌"
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
