@@ -26,6 +26,7 @@ public class ShutdownWorker : BackgroundService
             try
             {
                 var keyFile = new PrivateKeyFile(PrivateKeyPath);
+                ;
                 var keyAuth = new PrivateKeyAuthenticationMethod(User, keyFile);
                 var connectionInfo = new ConnectionInfo(HostName, User, keyAuth);
                 SSHClient = new SshClient(connectionInfo);
