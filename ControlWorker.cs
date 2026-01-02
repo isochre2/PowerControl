@@ -9,9 +9,7 @@ namespace PowerControl
         private readonly ILogger<ControlWorker> logger;
         public WaterStateReply fakeWaterState { get; set; } = new WaterStateReply();
         public ValveStateReply fakeValveState { get; set; } = new ValveStateReply();
-
-        public static bool initialized = false;
-
+        
         private static GpioController gpioController;
 
         private List<int> gpioNumbers = new List<int>() { 4, 17, 18, 22, 23, /*24*/ };
@@ -22,27 +20,9 @@ namespace PowerControl
         {
             logger = _logger;
             debugStopwatch.Start();
-            try
-            {
-                InitGpios();
-            }
-            catch (Exception e)
-            {
-                
-                Console.WriteLine("Impossible d'initialiser les GPIOs de contrôle : \n" + e.Message);
-                //throw;
-            }
-        }
+            
+            InitGpios();
 
-        private void InitGpios()
-        {
-            gpioController = new GpioController();
-            foreach (var pinNumber in gpioNumbers)
-            {
-                gpioController.OpenPin(pinNumber, PinMode.InputPullUp);
-            }
-
-            initialized = true;
             var cts = new CancellationTokenSource();
             Task.Run(async () =>
             {
@@ -50,13 +30,30 @@ namespace PowerControl
                 {
                     foreach (var pinNumber in gpioNumbers)
                     {
-                        Console.WriteLine("GPIO " + pinNumber + " : " + gpioController.Read(pinNumber));
+                        Console.WriteLine("GPIO " + pinNumber + " : " + (gpioController?.Read(pinNumber).ToString() ?? "Unknown"));
                     }
 
                     Console.WriteLine("------------------------------------------------------");
                     await Task.Delay(1000, cts.Token);
                 }
             }, cts.Token);
+        }
+
+        private void InitGpios()
+        {
+            try
+            {
+                gpioController = new GpioController();
+                foreach (var pinNumber in gpioNumbers)
+                {
+                    gpioController.OpenPin(pinNumber, PinMode.InputPullUp);
+                }
+            }
+            catch (Exception e)
+            {
+                gpioController = null;
+                Console.WriteLine("Impossible d'initialiser les GPIOs de contrôle : \n" + e.Message);
+            }
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
