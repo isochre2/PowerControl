@@ -11,7 +11,9 @@ public class ShutdownWorker : BackgroundService
 {
     private class LocalSSHClient
     {
-        public SshClient SSHClient { get; set; }
+        public bool? IsConnected => SSHClient?.IsConnected;
+        
+        private SshClient SSHClient { get; set; }
 
         private string PrivateKeyPath => "/app/ssh_keys/id_rsa_shutdown";
 
@@ -26,12 +28,11 @@ public class ShutdownWorker : BackgroundService
             try
             {
                 var keyFile = new PrivateKeyFile(PrivateKeyPath);
-                ;
                 var keyAuth = new PrivateKeyAuthenticationMethod(User, keyFile);
                 var connectionInfo = new ConnectionInfo(HostName, User, keyAuth);
                 SSHClient = new SshClient(connectionInfo);
                 SSHClient.Connect();
-                Console.WriteLine($"Connexion SSH établie à {HostName} avec succès !");
+                Console.WriteLine($"Connexion SSH établie à {HostName} avec succès : " + SSHClient.IsConnected);
                 ExecuteCommand("echo \"Connexion établie le $(date)\" >> shutdown_log.txt",
                     out string CommandOutputType, out string errorOutput);
             }
@@ -68,8 +69,8 @@ public class ShutdownWorker : BackgroundService
         }
     }
 
-    private LocalSSHClient RaspberryControl => new() { HostName = "raspberrypicontrol", User = "isochre" };
-    private LocalSSHClient RaspberryPower => new() { HostName = "raspberrypi", User = "isochre" };
+    private LocalSSHClient RaspberryControl = new() { HostName = "raspberrypicontrol", User = "isochre" };
+    private LocalSSHClient RaspberryPower = new() { HostName = "raspberrypi", User = "isochre" };
 
 
     private static GpioController gpioController;
@@ -89,11 +90,13 @@ public class ShutdownWorker : BackgroundService
         {
             while (!cts.IsCancellationRequested)
             {
-                if (RaspberryControl?.SSHClient?.IsConnected is not true) RaspberryControl?.Connect();
-                if (RaspberryPower?.SSHClient?.IsConnected is not true) RaspberryPower?.Connect();
+                
+                //Console.WriteLine("(RaspberryControl?.SSHClient?.IsConnected) : " + RaspberryControl.SSHClient.IsConnected.ToString());
+                if ((RaspberryControl?.IsConnected) is not true) RaspberryControl?.Connect();
+                if (RaspberryPower?.IsConnected is not true) RaspberryPower?.Connect();
 
 
-                Console.WriteLine("GPIO " + SHUTDOWN_GPIO + " : " + gpioController.Read(SHUTDOWN_GPIO));
+                Console.WriteLine("GPIO " + SHUTDOWN_GPIO + " : " + (gpioController?.Read(SHUTDOWN_GPIO).ToString() ?? "Unknown"));
                 Console.WriteLine("------------------------------------------------------");
                 await Task.Delay(1000, cts.Token);
             }
@@ -109,6 +112,7 @@ public class ShutdownWorker : BackgroundService
         }
         catch (Exception e)
         {
+            gpioController = null;
             Console.WriteLine("Impossible d'initialiser les GPIOs de contrôle : \n" + e.Message);
         }
     }
@@ -121,7 +125,7 @@ public class ShutdownWorker : BackgroundService
             if (logger.IsEnabled(LogLevel.Information))
             {
                 //On vérifie l'état de 
-                if (gpioController.Read(SHUTDOWN_GPIO) == PinValue.Low)
+                if (gpioController?.Read(SHUTDOWN_GPIO) == PinValue.Low)
                 {
                     var shutdownCommandResult = RaspberryPower.ExecuteCommand(
                         "echo \"Commande d'arrêt reçue le $(date)\" >> shutdown_log.txt && sudo shutdown -h now",
