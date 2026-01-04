@@ -77,7 +77,7 @@ public class ShutdownWorker : BackgroundService
 
     private readonly ILogger<ControlWorker> logger;
 
-    private const int SHUTDOWN_GPIO = 24 /*25*/;
+    private const int SHUTDOWN_GPIO = 25;
 
     public ShutdownWorker(ILogger<ControlWorker> _logger)
     {

@@ -12,7 +12,7 @@ namespace PowerControl
         
         private static GpioController gpioController;
 
-        private List<int> gpioNumbers = new List<int>() { 4, 17, 18, 22, 23, /*24*/ };
+        private List<int> gpioNumbers = new List<int>() { 4, 17, 18, 22, 23, 24 };
 
         Stopwatch debugStopwatch = new Stopwatch();
 
