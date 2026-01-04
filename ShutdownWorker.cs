@@ -132,7 +132,7 @@ public class ShutdownWorker : BackgroundService
                         out string errorOutputPower,
                         out string commandOutputPower);
                     Console.WriteLine(errorOutputPower);
-                    if (shutdownCommandResult)
+                    //if (shutdownCommandResult)
                     {
                         RaspberryControl.ExecuteCommand(
                             "echo \"Commande d'arrêt reçue le $(date)\" >> shutdown_log.txt && sudo shutdown -h now",
