@@ -125,20 +125,20 @@ public class ShutdownWorker : BackgroundService
             if (logger.IsEnabled(LogLevel.Information))
             {
                 //On vérifie l'état de 
-                if (gpioController?.Read(SHUTDOWN_GPIO) == PinValue.Low)
+                if (gpioController?.Read(SHUTDOWN_GPIO) == PinValue.High)
                 {
-                    //var shutdownCommandResult = RaspberryPower.ExecuteCommand(
-                    //    "echo \"Commande d'arrêt reçue le $(date)\" >> shutdown_log.txt && sudo shutdown -h now",
-                    //    out string errorOutputPower,
-                    //    out string commandOutputPower);
-                    //Console.WriteLine(errorOutputPower);
-                    ////if (shutdownCommandResult)
-                    //{
-                    //    RaspberryControl.ExecuteCommand(
-                    //        "echo \"Commande d'arrêt reçue le $(date)\" >> shutdown_log.txt && sudo shutdown -h now",
-                    //        out string errorOutputControl,
-                    //        out string commandOutputControl);
-                    //}
+                    var shutdownCommandResult = RaspberryPower.ExecuteCommand(
+                        "echo \"Commande d'arrêt reçue le $(date)\" >> shutdown_log.txt && sudo shutdown -h now",
+                        out string errorOutputPower,
+                        out string commandOutputPower);
+                    Console.WriteLine(errorOutputPower);
+                    //if (shutdownCommandResult)
+                    {
+                        RaspberryControl.ExecuteCommand(
+                            "echo \"Commande d'arrêt reçue le $(date)\" >> shutdown_log.txt && sudo shutdown -h now",
+                            out string errorOutputControl,
+                            out string commandOutputControl);
+                    }
                 }
 
                 await Task.Delay(100, stoppingToken);
