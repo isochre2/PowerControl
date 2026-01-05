@@ -125,7 +125,7 @@ public class ShutdownWorker : BackgroundService
             if (logger.IsEnabled(LogLevel.Information))
             {
                 //On vérifie l'état de 
-                if (gpioController?.Read(SHUTDOWN_GPIO) == PinValue.High)
+                if (gpioController?.Read(SHUTDOWN_GPIO) == PinValue.Low)
                 {
                     var shutdownCommandResult = RaspberryPower.ExecuteCommand(
                         "echo \"Commande d'arrêt reçue le $(date)\" >> shutdown_log.txt && sudo shutdown -h now",
