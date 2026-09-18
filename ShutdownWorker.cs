@@ -69,8 +69,8 @@ public class ShutdownWorker : BackgroundService
         }
     }
 
-    private LocalSSHClient RaspberryControl = new() { HostName = "raspberrypicontrol", User = "isochre" };
-    private LocalSSHClient RaspberryPower = new() { HostName = "raspberrypi", User = "isochre" };
+    private LocalSSHClient RaspberryControl = new() { HostName = "192.168.1.38", User = "isochre" };
+    private LocalSSHClient RaspberryPower = new() { HostName = "192.168.1.58", User = "isochre" };
 
 
     private static GpioController gpioController;
