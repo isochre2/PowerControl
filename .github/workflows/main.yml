@@ -52,7 +52,7 @@ jobs:
         if: success()
         uses: Ilshidur/action-discord@master
         with:
-            args: "La GitHub Action s’est exécutée avec succès ! 🎉"
+            args: "✅ `isochre/powercontrolbackend` reconstruit et poussé avec succès !"
         env:
             DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
 
@@ -60,6 +60,6 @@ jobs:
         if: failure()
         uses: Ilshidur/action-discord@master
         with:
-          args: "La GitHub Action a échoué. ❌"
+          args: "❌ Échec de la reconstruction de `isochre/powercontrolbackend`."
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
