@@ -33,8 +33,6 @@ public class ShutdownWorker : BackgroundService
                 SSHClient = new SshClient(connectionInfo);
                 SSHClient.Connect();
                 Console.WriteLine($"Connexion SSH établie à {HostName} avec succès : " + SSHClient.IsConnected);
-                ExecuteCommand("echo \"Connexion établie le $(date)\" >> shutdown_log.txt",
-                    out string CommandOutputType, out string errorOutput);
             }
             catch (Exception ex)
             {
