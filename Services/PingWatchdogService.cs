@@ -95,7 +95,7 @@ namespace PowerControl.Services
         {
             try
             {
-                var keyFile = new PrivateKeyFile("/app/ssh_keys/id_rsa_shutdown");
+                var keyFile = new PrivateKeyFile("/app/ssh_keys/id_gateway_check");
                 var keyAuth = new PrivateKeyAuthenticationMethod("isochre", keyFile);
                 var connectionInfo = new ConnectionInfo("raspberrypicontrol.local", "isochre", keyAuth);
 
