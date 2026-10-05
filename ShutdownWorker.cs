@@ -29,7 +29,7 @@ public class ShutdownWorker : BackgroundService
             {
                 var keyFile = new PrivateKeyFile(PrivateKeyPath);
                 var keyAuth = new PrivateKeyAuthenticationMethod(User, keyFile);
-                var connectionInfo = new ConnectionInfo(HostName, User, keyAuth);
+                var connectionInfo = new ConnectionInfo(HostName, User, keyAuth) { Timeout = TimeSpan.FromSeconds(5) };
                 SSHClient = new SshClient(connectionInfo);
                 SSHClient.Connect();
                 Console.WriteLine($"Connexion SSH établie à {HostName} avec succès : " + SSHClient.IsConnected);
@@ -52,9 +52,22 @@ public class ShutdownWorker : BackgroundService
                 return false;
             }
 
-            var cmd = SSHClient.RunCommand(command);
-            commandOutput = cmd.Result;
-            return true;
+            try
+            {
+                using var cmd = SSHClient.CreateCommand(command);
+                cmd.CommandTimeout = TimeSpan.FromSeconds(5);
+                commandOutput = cmd.Execute();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Liaison morte ou Pi déjà en cours d'extinction : on n'insiste pas,
+                // l'ordre suivant (C lui-même) doit partir quoi qu'il arrive.
+                // Pas de Disconnect() ici : sur une liaison morte, il pourrait bloquer.
+                errorOutput = ex.Message;
+                SSHClient = null;
+                return false;
+            }
         }
 
         public void Disconnect()
@@ -127,15 +140,15 @@ public class ShutdownWorker : BackgroundService
                 {
                     var shutdownCommandResult = RaspberryPower.ExecuteCommand(
                         "echo \"Commande d'arrêt reçue le $(date)\" >> shutdown_log.txt && sudo shutdown -h now",
-                        out string errorOutputPower,
-                        out string commandOutputPower);
+                        out string commandOutputPower,
+                        out string errorOutputPower);
                     Console.WriteLine(errorOutputPower);
                     //if (shutdownCommandResult)
                     {
                         RaspberryControl.ExecuteCommand(
                             "echo \"Commande d'arrêt reçue le $(date)\" >> shutdown_log.txt && sudo shutdown -h now",
-                            out string errorOutputControl,
-                            out string commandOutputControl);
+                            out string commandOutputControl,
+                            out string errorOutputControl);
                     }
                 }
 
