@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Renci.SshNet;
+using Renci.SshNet.Common;
 using System.Diagnostics;
 using System.Device.Gpio;
 using Iot.Device.Camera.Settings;
@@ -42,6 +43,7 @@ public class ShutdownWorker : BackgroundService
             return true;
         }
 
+        // Renvoie true si la commande a été remise au Pi (y compris s'il a coupé la connexion en s'éteignant)
         public bool ExecuteCommand(string command, out string commandOutput, out string errorOutput)
         {
             errorOutput = "";
@@ -59,10 +61,16 @@ public class ShutdownWorker : BackgroundService
                 commandOutput = cmd.Execute();
                 return true;
             }
+            catch (SshConnectionException ex)
+            {
+                // Le Pi a coupé la connexion pendant la commande : cas normal d'un shutdown, l'ordre est passé
+                errorOutput = ex.Message;
+                SSHClient = null;
+                return true;
+            }
             catch (Exception ex)
             {
-                // Liaison morte ou Pi déjà en cours d'extinction : on n'insiste pas,
-                // l'ordre suivant (C lui-même) doit partir quoi qu'il arrive.
+                // Liaison morte (timeout) : l'ordre n'est pas passé, l'appelant réessaiera.
                 // Pas de Disconnect() ici : sur une liaison morte, il pourrait bloquer.
                 errorOutput = ex.Message;
                 SSHClient = null;
@@ -90,6 +98,14 @@ public class ShutdownWorker : BackgroundService
 
     private const int SHUTDOWN_GPIO = 25;
 
+    // L'Arduino coupe le 12V 5 min après le signal : on laisse 4 min pour joindre P
+    // (le réseau CPL peut revenir après une coupure courte), puis 1 min à C pour s'arrêter.
+    private static readonly TimeSpan PowerOrderDeadline = TimeSpan.FromMinutes(4);
+
+    private DateTime? shutdownTriggeredAt;
+    private bool powerOrderDelivered;
+    private string lastPowerError;
+
     public ShutdownWorker(ILogger<ControlWorker> _logger)
     {
         logger = _logger;
@@ -101,14 +117,8 @@ public class ShutdownWorker : BackgroundService
         {
             while (!cts.IsCancellationRequested)
             {
-                
-                //Console.WriteLine("(RaspberryControl?.SSHClient?.IsConnected) : " + RaspberryControl.SSHClient.IsConnected.ToString());
                 if ((RaspberryControl?.IsConnected) is not true) RaspberryControl?.Connect();
                 if (RaspberryPower?.IsConnected is not true) RaspberryPower?.Connect();
-
-
-                Console.WriteLine("GPIO " + SHUTDOWN_GPIO + " : " + (gpioController?.Read(SHUTDOWN_GPIO).ToString() ?? "Unknown"));
-                Console.WriteLine("------------------------------------------------------");
                 await Task.Delay(1000, cts.Token);
             }
         }, cts.Token);
@@ -136,15 +146,33 @@ public class ShutdownWorker : BackgroundService
             if (logger.IsEnabled(LogLevel.Information))
             {
                 //On vérifie l'état de 
-                if (gpioController?.Read(SHUTDOWN_GPIO) == PinValue.Low)
+                // Une fois déclenchée, la séquence va jusqu'au bout (comme côté Arduino)
+                if (shutdownTriggeredAt == null && gpioController?.Read(SHUTDOWN_GPIO) == PinValue.Low)
                 {
-                    var shutdownCommandResult = RaspberryPower.ExecuteCommand(
-                        "echo \"Commande d'arrêt reçue le $(date)\" >> shutdown_log.txt && sudo shutdown -h now",
-                        out string commandOutputPower,
-                        out string errorOutputPower);
-                    Console.WriteLine(errorOutputPower);
-                    //if (shutdownCommandResult)
+                    shutdownTriggeredAt = DateTime.UtcNow;
+                    Console.WriteLine("Signal de coupure reçu : séquence d'arrêt engagée.");
+                }
+
+                if (shutdownTriggeredAt != null)
+                {
+                    if (!powerOrderDelivered)
                     {
+                        powerOrderDelivered = RaspberryPower.ExecuteCommand(
+                            "echo \"Commande d'arrêt reçue le $(date)\" >> shutdown_log.txt && sudo shutdown -h now",
+                            out string commandOutputPower,
+                            out string errorOutputPower);
+                        if (powerOrderDelivered)
+                            Console.WriteLine("Ordre d'arrêt remis à P.");
+                        else if (errorOutputPower != lastPowerError)
+                            Console.WriteLine($"Ordre d'arrêt vers P non remis, nouvelle tentative : {errorOutputPower}");
+                        lastPowerError = errorOutputPower;
+                    }
+
+                    bool deadlineReached = DateTime.UtcNow - shutdownTriggeredAt >= PowerOrderDeadline;
+                    if (powerOrderDelivered || deadlineReached)
+                    {
+                        if (!powerOrderDelivered)
+                            Console.WriteLine("Délai dépassé : P n'a pas pu être joint, arrêt de C quand même.");
                         RaspberryControl.ExecuteCommand(
                             "echo \"Commande d'arrêt reçue le $(date)\" >> shutdown_log.txt && sudo shutdown -h now",
                             out string commandOutputControl,
