@@ -26,14 +26,20 @@ namespace PowerControl
             var cts = new CancellationTokenSource();
             Task.Run(async () =>
             {
+                // Seulement les changements d'état : limite les écritures sur la carte SD
+                var lastValues = new Dictionary<int, string>();
                 while (!cts.IsCancellationRequested)
                 {
                     foreach (var pinNumber in gpioNumbers)
                     {
-                        Console.WriteLine("GPIO " + pinNumber + " : " + (gpioController?.Read(pinNumber).ToString() ?? "Unknown"));
+                        var value = gpioController?.Read(pinNumber).ToString() ?? "Unknown";
+                        if (!lastValues.TryGetValue(pinNumber, out var last) || last != value)
+                        {
+                            Console.WriteLine("GPIO " + pinNumber + " : " + value);
+                            lastValues[pinNumber] = value;
+                        }
                     }
 
-                    Console.WriteLine("------------------------------------------------------");
                     await Task.Delay(1000, cts.Token);
                 }
             }, cts.Token);
@@ -71,8 +77,6 @@ namespace PowerControl
                         5000) //toutes les Xmin on met à jour artificielement l'état de l'unité de contrôle
                     {
                         debugStopwatch.Restart();
-                        Console.WriteLine("Updating fake valve state and fake water state fakeWaterState.WaterDown = " +
-                                          fakeWaterState.WaterDown);
 
                         if (fakeWaterState.WaterDown && fakeWaterState.WaterUp)
                         {
@@ -101,10 +105,11 @@ namespace PowerControl
                             fakeWaterState.WaterDown = true;
                             fakeWaterState.WaterUp = true;
                         }
-
-                        await Task.Delay(10, stoppingToken);
                     }
                 }
+
+                // Pause à chaque tour (et pas seulement toutes les 5 s) : sans elle la boucle occupe un cœur à 100 %
+                await Task.Delay(100, stoppingToken);
             }
         }
     }
