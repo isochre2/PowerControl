@@ -15,8 +15,8 @@ builder.Services.AddSingleton<ShutdownWorker>();
 builder.Services.AddHostedService(provider => provider.GetRequiredService<ControlWorker>());
 builder.Services.AddHostedService(provider => provider.GetRequiredService<ShutdownWorker>());
 
-// Filet de secours si le GPIO ne déclenche jamais (voir Services/PingWatchdogService.cs)
-builder.Services.AddHostedService<PingWatchdogService>();
+// Coupure secteur détectée par la perte du lien Ethernet, en plus du GPIO (voir Services/LinkWatchdogService.cs)
+builder.Services.AddHostedService<LinkWatchdogService>();
 builder.Services.AddSingleton(serviceProvider => new ControlService(serviceProvider.GetRequiredService<ILogger<ControlService>>(), serviceProvider));
 
 var app = builder.Build();
