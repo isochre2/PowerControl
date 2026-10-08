@@ -14,10 +14,11 @@ namespace PowerControl.Services
     // coupure secteur sans perte du lien, et les coupures trop courtes pour atteindre le seuil
     // ci-dessous mais assez longues pour engager la séquence de l'Arduino.
     //
-    // Seuil de 20 s : l'Arduino ignore les coupures de moins de 10 s, et le port Ethernet du
-    // boîtier revient ~2,5 s après le retour du courant (mesuré le 08/10/2026). Un Pi éteint
-    // sans que l'Arduino ait engagé sa séquence resterait éteint (rien ne le rallume) : le
-    // seuil doit donc dépasser largement 12,5 s. Voir COUPURE_SECTEUR.md.
+    // Seuil de 30 s : l'Arduino n'engage sa séquence que ~14,6 s après la perte du lien
+    // (debounce de 10 s + son propre délai de détection), et le port Ethernet du boîtier
+    // revient ~2,5 s après le retour du courant (mesures du 08/10/2026). Un Pi éteint sans
+    // que l'Arduino ait engagé sa séquence resterait éteint (rien ne le rallume) : le seuil
+    // doit dépasser ~17 s avec de la marge. Voir COUPURE_SECTEUR.md.
     public class LinkWatchdogService : BackgroundService
     {
         private readonly ILogger<LinkWatchdogService> logger;
@@ -27,7 +28,7 @@ namespace PowerControl.Services
         private const string CarrierPath = "/host_eth0/carrier";
         private const string LocalHost = "raspberrypicontrol.local";
         private static readonly TimeSpan CheckInterval = TimeSpan.FromSeconds(1);
-        private static readonly TimeSpan LinkDownThreshold = TimeSpan.FromSeconds(20);
+        private static readonly TimeSpan LinkDownThreshold = TimeSpan.FromSeconds(30);
 
         private DateTime? linkDownSince;
         private bool readErrorLogged;
