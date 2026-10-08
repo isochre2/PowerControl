@@ -18,13 +18,13 @@ namespace PowerControl.Services
 
         public override Task<WaterStateReply> GetWaterState(WaterStateRequest request, ServerCallContext context)
         {
-            return Task.FromResult(controlWorker.fakeWaterState);
+            return Task.FromResult(controlWorker.WaterState);
         }
 
         public override Task<ValveStateReply> GetValveState(ValveStateRequest request, ServerCallContext context)
         {
             _logger.LogInformation("Valve state requested !");
-            return Task.FromResult(controlWorker.fakeValveState);
+            return Task.FromResult(controlWorker.ValveState);
         }
     }
 }
