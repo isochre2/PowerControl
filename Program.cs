@@ -17,6 +17,9 @@ builder.Services.AddHostedService(provider => provider.GetRequiredService<Shutdo
 
 // Coupure secteur détectée par la perte du lien Ethernet, en plus du GPIO (voir Services/LinkWatchdogService.cs)
 builder.Services.AddHostedService<LinkWatchdogService>();
+
+// Sauvegarde hebdomadaire de la base InfluxDB de raspberrypi sur ce Pi (voir Services/BackupWorker.cs)
+builder.Services.AddHostedService<BackupWorker>();
 builder.Services.AddSingleton(serviceProvider => new ControlService(serviceProvider.GetRequiredService<ILogger<ControlService>>(), serviceProvider));
 
 var app = builder.Build();
